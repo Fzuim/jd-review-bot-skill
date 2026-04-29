@@ -167,21 +167,33 @@ if (body.includes('请填写完整的评价内容')) return 'ERROR';  // 校验�
 
 全部评价完成后，回评价列表页验证所有页的"评价"链接数为 0。
 
-## brouser-use CLI 命令参考
+## browser-use CLI 命令参考
+
+> **关键**: 所有命令必须加 `--session <name>` 保持会话状态，否则后续 eval/type/state 会报 `SessionManager not initialized` 错误。
 
 ```bash
 # 打开页面
-browser-use --browser real --headed open "<url>"
+browser-use --browser real --headed --session jdreview open "<url>"
 
 # 执行 JavaScript（返回 JSON）
-browser-use --browser real --headed --json eval "<js_code>"
+browser-use --browser real --headed --session jdreview --json eval "<js_code>"
 
 # 模拟键盘输入（必须用于 textarea 填文字）
-browser-use --browser real --headed type "<text>"
+browser-use --browser real --headed --session jdreview type "<text>"
 
 # 查看页面状态
-browser-use --browser real --headed state
+browser-use --browser real --headed --session jdreview state
 ```
+
+## 常见问题
+
+### SessionManager not initialized
+
+每个 `browser-use` CLI 命令是独立进程，不加 `--session` 无法共享浏览器状态。修复方式：所有命令统一加 `--session <name>` 参数，脚本中在 `run()` 函数统一注入即可。`open` 命令负责创建会话，后续 `eval`/`type`/`state` 复用同一会话。
+
+### 收集到 0 条待评价
+
+通常是 eval 执行失败但被静默吞掉（脚本 `bu_eval` 的 except 分支返回了空字符串）。确认 `run()` 函数中已包含 `--session` 参数。`browser-use` 4.x 版本起强制要求 session 参数。`open` 命令负责创建会话，后续 `eval`/`type`/`state` 复用同一会话。
 
 ## 批量脚本
 
